@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "view-capture"
+version = "0.1.0"
+description = "Capture a molecule's on-screen orientation from ASE's x3d viewer as an ASE rotation for POV-Ray/matplotlib rendering."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [{ name = "ViLab Tartu electrochemistry group" }]
+keywords = ["ase", "x3d", "x3dom", "povray", "visualization", "dft", "electrocatalysis"]
+dependencies = [
+    "ase>=3.22",
+    "numpy",
+    "ipython",
+]
+
+[project.urls]
+# Set this to wherever you host the file (used by the notebooks' bootstrap cell too):
+Homepage = "https://github.com/MineBonik/view_capture"
+
+[tool.setuptools]
+# The whole tool is a single module file.
+py-modules = ["view_capture"]
