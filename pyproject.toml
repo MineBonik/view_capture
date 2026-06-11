@@ -9,7 +9,7 @@ description = "Capture a molecule's on-screen orientation from ASE's x3d viewer 
 readme = "README.md"
 requires-python = ">=3.8"
 license = { text = "MIT" }
-authors = [{ name = "ViLab Tartu electrochemistry group" }]
+authors = [{ name = "Bohdan Fochuk" }]
 keywords = ["ase", "x3d", "x3dom", "povray", "visualization", "dft", "electrocatalysis"]
 dependencies = [
     "ase>=3.22",
