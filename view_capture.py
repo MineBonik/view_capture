@@ -35,17 +35,20 @@ Then render with the captured angle::
     generic_projection_settings['rotation'] = CAPTURED_VIEWS['Pt111']['rotation']
     write('Pt111.pov', Pt111, **generic_projection_settings, povray_settings=povray_settings)
 
+To zoom the rendered image, add ``auto_bbox_size`` to the render (smaller = closer,
+e.g. ``0.8``); ASE auto-fits the framing otherwise.
+
 Three ways to use this one file
 -------------------------------
 1. **Copy-paste** its contents into a notebook cell.
 2. **Download + import** (matches how the course notebooks fetch data files)::
 
-       !wget -q https://<your-host>/view_capture.py
+       !wget -q https://raw.githubusercontent.com/MineBonik/view_capture/main/view_capture.py
        from view_capture import view_capture, CAPTURED_VIEWS, set_capture
 
 3. **pip install** (with the accompanying ``pyproject.toml``)::
 
-       !pip install git+https://github.com/<org>/<repo>
+       !pip install git+https://github.com/MineBonik/view_capture
        from view_capture import view_capture, CAPTURED_VIEWS, set_capture
 
 Requirements
@@ -66,8 +69,7 @@ __version__ = "0.1.0"
 __all__ = ["view_capture", "build_html", "set_capture", "CAPTURED_VIEWS", "__version__"]
 
 # Filled in by the JS -> kernel callback (Colab) or by set_capture(). Maps
-# name -> dict with keys: 'rotation' (3x3 np.ndarray), 'rotation_str' (str),
-# 'zoom' (float or None).
+# name -> dict with keys: 'rotation' (3x3 np.ndarray) and 'rotation_str' (str).
 CAPTURED_VIEWS = {}
 
 
@@ -109,18 +111,8 @@ def set_capture(name, rotation):
     CAPTURED_VIEWS[name] = {
         'rotation': R,
         'rotation_str': _rotation_str(R),
-        'zoom': None,
     }
     return CAPTURED_VIEWS[name]
-
-
-def _initial_camera_distance(atoms):
-    """Replicate ase.io.x3d.x3d_atoms: camera sits at 2 * max_dim on +z."""
-    cell_center = atoms.cell.diagonal() / 2
-    points = np.vstack((atoms.positions, atoms.cell[:])) - cell_center
-    extent = np.max(points, axis=0) - np.min(points, axis=0)
-    max_dim = float(np.max(extent)) if len(points) else 1.0
-    return max(max_dim * 2, 1e-6)
 
 
 def _register_colab_callback():
@@ -130,12 +122,11 @@ def _register_colab_callback():
     except Exception:
         return False
 
-    def _capture(name, mat9, zoom):
+    def _capture(name, mat9):
         R = np.array(mat9, dtype=float).reshape(3, 3)
         CAPTURED_VIEWS[name] = {
             'rotation': R,
             'rotation_str': _rotation_str(R),
-            'zoom': float(zoom),
         }
         return {'rotation_str': CAPTURED_VIEWS[name]['rotation_str']}
 
@@ -212,18 +203,13 @@ $scene
     function fa(v) { v = Math.round(v * 100) / 100; if (v === 0) v = 0; return v.toFixed(2); }
     var rs = fa(ang[0]) + 'x,' + fa(ang[1]) + 'y,' + fa(ang[2]) + 'z';
 
-    // zoom = initial camera distance / current camera distance
-    var tx = el(V, 0, 3), ty = el(V, 1, 3), tz = el(V, 2, 3);
-    var dist = Math.sqrt(tx * tx + ty * ty + tz * tz);
-    var zoom = dist > 1e-9 ? ($initdist / dist) : 1.0;
-
     var Rstr = '[[' + round6(R[0][0]) + ', ' + round6(R[0][1]) + ', ' + round6(R[0][2]) + '], ['
                     + round6(R[1][0]) + ', ' + round6(R[1][1]) + ', ' + round6(R[1][2]) + '], ['
                     + round6(R[2][0]) + ', ' + round6(R[2][1]) + ', ' + round6(R[2][2]) + ']]';
     out.value = "rotation string : " + rs + "\n"
               + "rotation matrix : " + Rstr + "\n"
-              + "zoom (x)        : " + zoom.toFixed(3) + "\n"
-              + "name            : '$name'";
+              + "name            : '$name'\n"
+              + "to zoom the render: add  auto_bbox_size=0.8  (smaller = closer)";
 
     try {
       var clip = document.getElementById('clip_$uid');
@@ -240,7 +226,7 @@ $scene
         var flat = [R[0][0], R[0][1], R[0][2],
                     R[1][0], R[1][1], R[1][2],
                     R[2][0], R[2][1], R[2][2]];
-        google.colab.kernel.invokeFunction('viewcapture.capture', ['$name', flat, zoom], {})
+        google.colab.kernel.invokeFunction('viewcapture.capture', ['$name', flat], {})
           .then(function(res) {
             try {
               var s = res.data['application/json'].rotation_str;
@@ -272,7 +258,6 @@ def build_html(atoms, name='view', width='400px', height='300px', uid=None):
         width=width,
         height=height,
         scene=scene,
-        initdist=repr(_initial_camera_distance(atoms)),
     )
 
 

@@ -72,13 +72,14 @@ Tips:
 `CAPTURED_VIEWS[name]` is a dict with:
 
 | key            | meaning |
-|----------------|----------|
+|----------------|---------|
 | `rotation`     | 3×3 NumPy rotation matrix — exact, gimbal-free; pass directly to `write(..., rotation=...)` |
 | `rotation_str` | the readable `'..x,..y,..z'` string (your existing notebook style) |
-| `zoom`         | viewer zoom factor (approximate; `None` for `set_capture`) — see note below |
 
-`rotation` reproduces the **angle** you set. Framing/size is auto-fit by ASE, so `zoom` is informational
-(ASE rescales to fit); pan is not captured.
+`rotation` reproduces the **angle** you set. Framing is auto-fit by ASE; to **zoom**, add
+`auto_bbox_size` to your render (smaller = closer, e.g. `0.8`; larger = more whitespace). For full
+control of zoom *and* pan, pass an explicit `bbox=(xlo, ylo, xhi, yhi)` in Ångströms. Pan is not
+captured.
 
 ---
 
